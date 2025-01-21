@@ -1,0 +1,1 @@
+Run `npx @angular/cli new angular-app --defaults` to generate the app.
