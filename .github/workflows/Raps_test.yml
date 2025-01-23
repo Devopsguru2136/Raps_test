@@ -31,7 +31,7 @@ jobs:
       run: |
     
         pip install pytest
-        export PYTHONPATH=./python-app/src
+        export PYTHONPATH=$(pwd)/python-app/src
         pytest python-app/tests/
     # - name: Deploy to Heroku
     #   env:
