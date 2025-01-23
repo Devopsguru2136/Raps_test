@@ -1,6 +1,12 @@
-from app import main
+# from app import main
 
 
-def test_main():
-    assert main() == "Hello, Python!"
+# def test_main():
+#     assert main() == "Hello, Python!"
+
+from app import index
+
+
+def test_index():
+    assert index() == "Hello, world!" 
 
