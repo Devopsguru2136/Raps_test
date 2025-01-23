@@ -1,0 +1,156 @@
+name: CI Workflow for Node.js, Python, and Angular Applications
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+  build:
+    name: Build Applications
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        app-type: [nodejs, python, angular]
+    steps:
+      - name: Setup Node.js
+        if: matrix.app-type == 'nodejs' || matrix.app-type == 'angular'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies for Node.js
+        if: matrix.app-type == 'nodejs'
+        run: |
+          cd nodejs-app
+          npm install
+
+      - name: Build Node.js Application
+        if: matrix.app-type == 'nodejs'
+        run: |
+          cd nodejs-app
+          npm run build
+
+      - name: Install Dependencies for Angular
+        if: matrix.app-type == 'angular'
+        run: |
+          cd angular-app
+          npm install
+
+      - name: Build Angular Application
+        if: matrix.app-type == 'angular'
+        run: |
+          cd angular-app
+          ng build --configuration production
+
+      - name: Setup Python
+        if: matrix.app-type == 'python'
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+         # stop the build if there are Python syntax errors or undefined names
+         # flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          #flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Test with pytest
+        run: |
+          pip install pytest
+          export PYTHONPATH=src
+          pytest
+ 
+  lint:
+    name: Lint Code
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        app-type: [nodejs, python, angular]
+    steps:
+      - name: Lint Node.js Code
+        if: matrix.app-type == 'nodejs'
+        run: |
+          cd nodejs-app
+          npm run lint
+
+      - name: Lint Angular Code
+        if: matrix.app-type == 'angular'
+        run: |
+          cd angular-app
+          ng lint
+
+      - name: Lint Python Code
+        if: matrix.app-type == 'python'
+        run: |
+          cd RAPS_TESTING/python-app
+          pylint **/*.py
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    strategy:
+      matrix:
+        app-type: [nodejs, python, angular]
+    steps:
+      - name: Run Node.js Tests
+        if: matrix.app-type == 'nodejs'
+        run: npm test
+
+      - name: Run Angular Tests
+        if: matrix.app-type == 'angular'
+        run: ng test --watch=false --browsers=ChromeHeadless
+
+      - name: Run Python Tests
+        if: matrix.app-type == 'python'
+        run: 
+          cd RAPS_TESTING/python-app
+          pytest
+
+  scan:
+    name: Scan Code with SonarQube (Dummy)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Dummy SonarQube Scan
+        run: |
+          echo "SonarQube scanning step is a placeholder. Configure with actual credentials and server details when available."
+
+  artifact:
+    name: Publish Artifacts to JFrog
+    runs-on: ubuntu-latest
+    needs: scan
+    steps:
+      - name: Create Artifact
+        run: zip -r artifact.zip .
+
+      - name: Upload Artifact to JFrog
+        run: |
+          echo "Uploading artifact to JFrog..."
+          # Placeholder for JFrog upload command
+
+  notify:
+    name: Notify Completion
+    runs-on: ubuntu-latest
+    needs: artifact
+    steps:
+      - name: Send Notification
+        run: echo "CI/CD workflow completed successfully."
