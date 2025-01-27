@@ -68,8 +68,10 @@ jobs:
     needs: scan
     steps:
       - name: Create Artifact
-        run: zip -r artifact.zip .
-
+        run: |
+         echo "Zipping artifact to JFrog..."
+   #      zip -r artifact.zip .
+          
       - name: Upload Artifact to JFrog
         run: |
           echo "Uploading artifact to JFrog..."
